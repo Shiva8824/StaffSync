@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { notificationApi } from '../../api/services';
@@ -7,6 +7,8 @@ const Navbar = ({ toggleSidebar }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -17,16 +19,27 @@ const Navbar = ({ toggleSidebar }) => {
           setUnreadCount(res.data.unreadCount || 0);
         }
       } catch (err) {
-        // Silently handle if not loaded
+        // Silently handle
       }
     };
 
     fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 30000); // 30s polling
+    const interval = setInterval(fetchUnreadCount, 30000);
     return () => {
       isMounted = false;
       clearInterval(interval);
     };
+  }, []);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const handleLogout = async () => {
@@ -73,20 +86,22 @@ const Navbar = ({ toggleSidebar }) => {
         >
           <i className="bi bi-bell fs-5"></i>
           {unreadCount > 0 && (
-            <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white" style={{ fontSize: '0.65rem' }}>
+            <span
+              className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white"
+              style={{ fontSize: '0.65rem' }}
+            >
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
         </Link>
 
-        {/* User profile dropdown / actions */}
-        <div className="dropdown">
+        {/* User profile dropdown (React state controlled) */}
+        <div className="position-relative" ref={dropdownRef}>
           <button
-            className="btn btn-light d-flex align-items-center gap-2 p-1.5 pe-3 rounded-pill border"
+            className="btn btn-light d-flex align-items-center gap-2 p-1.5 pe-3 rounded-pill border shadow-sm"
             type="button"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-            id="userMenuButton"
+            onClick={() => setDropdownOpen((prev) => !prev)}
+            aria-expanded={dropdownOpen}
           >
             <div
               className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold"
@@ -97,39 +112,57 @@ const Navbar = ({ toggleSidebar }) => {
             <span className="small fw-semibold text-dark d-none d-md-inline">
               {user?.name?.split(' ')[0]}
             </span>
-            <i className="bi bi-chevron-down text-muted small"></i>
+            <i className={`bi bi-chevron-${dropdownOpen ? 'up' : 'down'} text-muted small`}></i>
           </button>
 
-          <ul className="dropdown-menu dropdown-menu-end shadow-sm border-0 py-2 mt-2" aria-labelledby="userMenuButton">
-            <li className="px-3 py-2 border-bottom mb-1">
-              <div className="fw-bold text-dark">{user?.name}</div>
-              <div className="text-muted small text-truncate" style={{ maxWidth: '200px' }}>
-                {user?.email}
+          {dropdownOpen && (
+            <div
+              className="dropdown-menu dropdown-menu-end show shadow border-0 py-2 mt-2 position-absolute end-0"
+              style={{ minWidth: '220px', zIndex: 1050 }}
+            >
+              <div className="px-3 py-2 border-bottom mb-1">
+                <div className="fw-bold text-dark">{user?.name}</div>
+                <div className="text-muted small text-truncate" style={{ maxWidth: '190px' }}>
+                  {user?.email}
+                </div>
+                <div className="badge bg-light text-dark border mt-1">
+                  {user?.employeeProfile?.employeeId || user?.role}
+                </div>
               </div>
-              <div className="badge bg-light text-dark border mt-1">
-                {user?.employeeProfile?.employeeId || user?.role}
-              </div>
-            </li>
-            <li>
-              <Link className="dropdown-item py-2" to="/profile">
+              <Link
+                className="dropdown-item py-2 d-flex align-items-center"
+                to="/profile"
+                onClick={() => setDropdownOpen(false)}
+              >
                 <i className="bi bi-person me-2 text-primary"></i>My Profile
               </Link>
-            </li>
-            <li>
-              <Link className="dropdown-item py-2" to="/notifications">
+              <Link
+                className="dropdown-item py-2 d-flex align-items-center"
+                to="/notifications"
+                onClick={() => setDropdownOpen(false)}
+              >
                 <i className="bi bi-bell me-2 text-info"></i>Notifications
               </Link>
-            </li>
-            <li>
-              <hr className="dropdown-divider my-1" />
-            </li>
-            <li>
-              <button className="dropdown-item py-2 text-danger" onClick={handleLogout}>
+              <div className="dropdown-divider my-1"></div>
+              <button
+                className="dropdown-item py-2 text-danger d-flex align-items-center fw-semibold"
+                onClick={handleLogout}
+              >
                 <i className="bi bi-box-arrow-right me-2"></i>Sign Out
               </button>
-            </li>
-          </ul>
+            </div>
+          )}
         </div>
+
+        {/* Dedicated Visible Logout Button on Topbar */}
+        <button
+          className="btn btn-outline-danger btn-sm d-flex align-items-center gap-1.5 px-3 py-1.5 rounded-pill shadow-sm fw-semibold"
+          onClick={handleLogout}
+          title="Sign out of StaffSync"
+        >
+          <i className="bi bi-box-arrow-right"></i>
+          <span className="d-none d-sm-inline">Sign Out</span>
+        </button>
       </div>
     </header>
   );

@@ -1,10 +1,17 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 const Sidebar = ({ isOpen, closeSidebar }) => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const role = user?.role;
+
+  const handleLogout = async () => {
+    closeSidebar();
+    await logout();
+    navigate('/login');
+  };
 
   // Determine dashboard destination based on role
   const dashboardPath =
@@ -26,7 +33,7 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
 
       <aside className={`sidebar ${isOpen ? 'show' : ''}`}>
         <div className="brand">
-          <i className="bi bi-diagram-3-fill fs-4"></i>
+          <i className="bi bi-diagram-3-fill fs-4 text-info"></i>
           <span>StaffSync</span>
         </div>
 
@@ -129,13 +136,22 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
             <i className="bi bi-person-badge"></i>
             <span>My Profile</span>
           </NavLink>
+
+          <button
+            type="button"
+            className="nav-link text-danger border-0 bg-transparent w-100 text-start mt-1"
+            onClick={handleLogout}
+          >
+            <i className="bi bi-box-arrow-right text-danger"></i>
+            <span>Sign Out</span>
+          </button>
         </nav>
 
-        {/* Footer profile indicator */}
+        {/* Footer profile indicator with Sign Out button */}
         <div className="p-3 border-top border-secondary border-opacity-25 mt-auto">
-          <div className="d-flex align-items-center gap-2">
+          <div className="d-flex align-items-center gap-2 mb-2.5">
             <div
-              className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold"
+              className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold flex-shrink-0"
               style={{ width: '36px', height: '36px', fontSize: '0.9rem' }}
             >
               {user?.name?.charAt(0).toUpperCase() || 'U'}
@@ -147,6 +163,15 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
               </div>
             </div>
           </div>
+
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2 py-1.5 fw-semibold"
+            onClick={handleLogout}
+          >
+            <i className="bi bi-box-arrow-right"></i>
+            <span>Sign Out</span>
+          </button>
         </div>
       </aside>
     </>
