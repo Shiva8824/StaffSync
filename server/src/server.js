@@ -5,6 +5,7 @@ const connectDB = require('./config/db');
 const app = require('./app');
 
 const PORT = process.env.PORT || 5000;
+const HOST = process.env.HOST || '0.0.0.0';
 
 // Connect to Database and start server
 const startServer = async () => {
@@ -21,8 +22,8 @@ const startServer = async () => {
       console.log('[Server] Auto-seed complete. Demo accounts ready.');
     }
 
-    const server = app.listen(PORT, () => {
-      console.log(`[Server] StaffSync Backend listening on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
+    const server = app.listen(PORT, HOST, () => {
+      console.log(`[Server] StaffSync Backend listening on http://${HOST}:${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
     });
 
     // Graceful shutdown handling

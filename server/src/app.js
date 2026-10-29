@@ -6,28 +6,48 @@ const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
-// Middlewares
-const allowedOrigins = [
-  process.env.CLIENT_URL || 'http://localhost:5173',
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-];
+// Build allowed origins list from environment and defaults
+const parseAllowedOrigins = () => {
+  const origins = ['http://localhost:5173', 'http://127.0.0.1:5173'];
+  if (process.env.CLIENT_URL) {
+    // Support single origin or comma-separated list
+    process.env.CLIENT_URL.split(',').forEach((url) => {
+      const trimmed = url.trim();
+      if (trimmed) origins.push(trimmed);
+    });
+  }
+  return origins;
+};
+
+const allowedOrigins = parseAllowedOrigins();
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // allow requests with no origin (like mobile apps, curl, or supertest requests)
+      // Allow requests with no origin (e.g. same-origin, mobile apps, supertest, curl)
       if (!origin) return callback(null, true);
-      if (
-        allowedOrigins.indexOf(origin) !== -1 ||
-        origin.endsWith('.onrender.com') ||
-        process.env.NODE_ENV === 'development'
-      ) {
+
+      // Check explicit allowed origins list
+      if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-      return callback(null, true); // Permissive for production deployment on Render
+
+      // Allow verified onrender.com subdomains for Render deployments
+      if (origin.endsWith('.onrender.com')) {
+        return callback(null, true);
+      }
+
+      // Allow local development origins in non-production
+      if (process.env.NODE_ENV !== 'production' && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+        return callback(null, true);
+      }
+
+      // Securely reject unauthorized cross-origin requests
+      return callback(new Error(`CORS policy blocked access from origin: ${origin}`), false);
     },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
 
