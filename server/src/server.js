@@ -10,6 +10,17 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   try {
     await connectDB();
+
+    // Auto-seed if database is empty (ideal for fresh Render / Atlas deployments)
+    const User = require('./models/User');
+    const userCount = await User.countDocuments();
+    if (userCount === 0) {
+      console.log('[Server] Blank database detected. Auto-seeding initial demo accounts...');
+      const seedData = require('./utils/seed');
+      await seedData();
+      console.log('[Server] Auto-seed complete. Demo accounts ready.');
+    }
+
     const server = app.listen(PORT, () => {
       console.log(`[Server] StaffSync Backend listening on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
     });

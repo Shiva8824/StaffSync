@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "description": "StaffSync - Professional Human Resource Management System (MERN)",
   "scripts": {
+    "build": "npm run install:all && cd client && npm run build",
+    "start": "node server/src/server.js",
     "install:server": "cd server && npm install",
     "install:client": "cd client && npm install",
     "install:all": "npm run install:server && npm run install:client",

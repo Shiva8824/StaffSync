@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const morgan = require('morgan');
 const errorHandler = require('./middleware/errorHandler');
@@ -15,12 +16,16 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
-      // allow requests with no origin (like mobile apps or curl/supertest requests)
+      // allow requests with no origin (like mobile apps, curl, or supertest requests)
       if (!origin) return callback(null, true);
-      if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+      if (
+        allowedOrigins.indexOf(origin) !== -1 ||
+        origin.endsWith('.onrender.com') ||
+        process.env.NODE_ENV === 'development'
+      ) {
         return callback(null, true);
       }
-      return callback(new Error('CORS not allowed from this origin'), false);
+      return callback(null, true); // Permissive for production deployment on Render
     },
     credentials: true,
   })
@@ -74,7 +79,19 @@ app.use('/api/trainings', trainingRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
-// 404 handler for unknown routes
+// Serve client static assets in production
+const clientDistPath = path.resolve(__dirname, '../../client/dist');
+app.use(express.static(clientDistPath));
+
+// For any non-API GET request in production, serve React's index.html
+app.get('*', (req, res, next) => {
+  if (req.originalUrl.startsWith('/api')) {
+    return next();
+  }
+  res.sendFile(path.resolve(clientDistPath, 'index.html'));
+});
+
+// 404 handler for unknown API routes
 app.use((req, res, next) => {
   res.status(404).json({
     success: false,

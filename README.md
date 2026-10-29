@@ -274,26 +274,25 @@ All protected endpoints require the HTTP Header:
 
 ---
 
-## 🚀 Production Build & Deployment
+## 🚀 Production Build & Render Deployment
 
-### Build Frontend Bundle
-```bash
-cd client
-npm run build
-```
-Creates an optimized production bundle inside `client/dist/`.
+StaffSync is fully optimized for **1-click cloud deployment on Render.com** as a unified full-stack application (serving the React SPA directly from Express in production).
 
-### Deployment Instructions (Render / Railway / Heroku / AWS)
-1. **Database:** Deploy a MongoDB cluster on [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).
-2. **Backend Service:**
-   - Set Build Command: `cd server && npm install`
-   - Set Start Command: `cd server && npm start`
-   - Set Environment Variables: `PORT`, `MONGODB_URI`, `JWT_SECRET`, `CLIENT_URL`, `NODE_ENV=production`.
-3. **Frontend Service (Vercel / Netlify / Static Host):**
-   - Root directory: `client`
-   - Build command: `npm run build`
-   - Output directory: `dist`
-   - Environment Variable: `VITE_API_URL=https://your-backend-api-domain.com/api`
+### Quick Deploy Options:
+1. **Option A: 1-Click Render Blueprint (`render.yaml`)**:
+   - In Render, click **New +** → **Blueprint** → Select your GitHub repository.
+   - Render automatically uses [render.yaml](file:///c:/Users/shiva/OneDrive/Desktop/futureSkillsProject1/render.yaml) to configure the build and start commands!
+
+2. **Option B: Standard Web Service on Render**:
+   - **Build Command:** `npm run build`
+   - **Start Command:** `npm start`
+   - **Environment Variables:**
+     - `NODE_ENV=production`
+     - `MONGODB_URI=<your_mongodb_atlas_connection_string>`
+     - `JWT_SECRET=<your_secure_jwt_secret>`
+     - `PORT=10000`
+
+> 📖 **Full Walkthrough:** For complete step-by-step instructions on setting up a free MongoDB Atlas cluster and whitelisting IP access, please see [DEPLOYMENT.md](file:///c:/Users/shiva/OneDrive/Desktop/futureSkillsProject1/DEPLOYMENT.md).
 
 ---
 

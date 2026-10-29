@@ -398,12 +398,23 @@ const seedData = async () => {
     console.log('     Role:     Employee');
     console.log('======================================================\n');
 
-    await mongoose.disconnect();
-    process.exit(0);
+    if (isDirectCli) {
+      await mongoose.disconnect();
+      process.exit(0);
+    }
+    return true;
   } catch (error) {
     console.error('[Seed Error] Failed to seed database:', error);
-    process.exit(1);
+    if (isDirectCli) {
+      process.exit(1);
+    }
+    throw error;
   }
 };
 
-seedData();
+const isDirectCli = require.main === module;
+if (isDirectCli) {
+  seedData();
+}
+
+module.exports = seedData;
